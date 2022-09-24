@@ -30,13 +30,13 @@ export class WordCloudComponent implements OnInit {
     components.push(Bodies.circle(this.canvasWidth/2, this.canvasHeight/2, 40, {isStatic: true, plugin: {
       attractors: [function(bodyA: Body, bodyB: Body) {
         return {
-          x: (bodyA.position.x - bodyB.position.x) * 1e-6,
-          y: (bodyA.position.y - bodyB.position.y) * 1e-6,
+          x: (bodyA.position.x - bodyB.position.x) * 4e-6,
+          y: (bodyA.position.y - bodyB.position.y) * 4e-6,
         };
       } ]
     }}));
 
-    components.push(Bodies.circle(20, 20, 30 ));
+    components.push(Bodies.circle(20, 20, 30, {restitution: 1}));
 
     Composite.add(this.engine.world, components);
 
