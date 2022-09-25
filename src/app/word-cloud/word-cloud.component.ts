@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { Bodies, Body, Composite, Constraint, Engine, MouseConstraint, Render, Runner } from 'matter-js';
 import * as MatterAttractors from 'matter-attractors';
 import * as Matter from 'matter-js';
@@ -14,6 +14,13 @@ export class WordCloudComponent implements OnInit {
 
   canvasWidth: number = 1000;
   canvasHeight: number = 500;
+
+  @HostListener("document:keypress", ["$event"])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if(this.engine){
+      Composite.add(this.engine.world, Bodies.circle(20 ,20, 20) );
+    }
+  }
 
   constructor() { }
 
@@ -33,8 +40,10 @@ export class WordCloudComponent implements OnInit {
           x: (bodyA.position.x - bodyB.position.x) * 4e-6,
           y: (bodyA.position.y - bodyB.position.y) * 4e-6,
         };
-      } ]
+      }]
     }}));
+
+    components.push(MouseConstraint.create(this.engine, {mouse: Matter.Mouse.create(this.render.canvas)}));
 
     components.push(Bodies.circle(20, 20, 30, {restitution: 1}));
 
