@@ -17,8 +17,19 @@ export class WordCloudComponent implements OnInit {
 
   @HostListener("document:keypress", ["$event"])
   handleKeyboardEvent(event: KeyboardEvent) {
+    this.createBody();
+  }
+
+  public createBody(): void {
     if(this.engine){
-      Composite.add(this.engine.world, Bodies.circle(20 ,20, 20) );
+      const value: number = this.getRandomArbitrary(2, 50);
+      Composite.add(this.engine.world, Bodies.circle(0,0, value, {
+        restitution: 0,mass: value,
+        // inverseMass: 1-value,
+        inertia: Number.POSITIVE_INFINITY,
+        
+        friction: 0,
+      }) );
     }
   }
 
@@ -34,18 +45,26 @@ export class WordCloudComponent implements OnInit {
 
     const components: Array<Body | Composite | Constraint | MouseConstraint> = [];
 
-    components.push(Bodies.circle(this.canvasWidth/2, this.canvasHeight/2, 40, {isStatic: true, plugin: {
+    components.push(Bodies.circle(this.canvasWidth/2, this.canvasHeight/2, 2, {isStatic: true, collisionFilter: {
+      group: 0,
+      category: 0
+    },  plugin: {
       attractors: [function(bodyA: Body, bodyB: Body) {
-        return {
-          x: (bodyA.position.x - bodyB.position.x) * 4e-6,
-          y: (bodyA.position.y - bodyB.position.y) * 4e-6,
+        var force = {
+          x: (bodyA.position.x - bodyB.position.x) * 1e-6,
+          y: (bodyA.position.y - bodyB.position.y) * 1e-6,
         };
-      }]
+
+        // apply force to both bodies
+        Body.applyForce(bodyA, bodyA.position, Matter.Vector.neg(force));
+        Body.applyForce(bodyB, bodyB.position, force);
+    }]
     }}));
 
     components.push(MouseConstraint.create(this.engine, {mouse: Matter.Mouse.create(this.render.canvas)}));
 
-    components.push(Bodies.circle(20, 20, 30, {restitution: 1}));
+    this.createBody();
+
 
     Composite.add(this.engine.world, components);
 
@@ -55,4 +74,8 @@ export class WordCloudComponent implements OnInit {
 
     Runner.run(runner, this.engine);
   }
+
+  public getRandomArbitrary(min: number, max: number): number {
+    return Math.random() * (max - min) + min;
+}
 }
