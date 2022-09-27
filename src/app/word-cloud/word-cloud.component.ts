@@ -1,5 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { Bodies, Body, Composite, Constraint, Engine, MouseConstraint, Render, Runner } from 'matter-js';
+import { Bodies, Body, Composite, Constraint, Engine, MouseConstraint, Render, Runner, Events, Mouse, Bounds } from 'matter-js';
 import * as MatterAttractors from 'matter-attractors';
 import * as Matter from 'matter-js';
 
@@ -11,18 +11,31 @@ import * as Matter from 'matter-js';
 export class WordCloudComponent implements OnInit {
   engine: Engine | undefined;
   render: Render | undefined;
+  center: Body | undefined;
+  mouse! : Mouse; // ! sagt das man davon ausgeht, dass es immer defined is wenn es benutzt wird
 
   canvasWidth: number = 1000;
   canvasHeight: number = 500;
 
   @HostListener("document:keypress", ["$event"])
   handleKeyboardEvent(event: KeyboardEvent) {
-    if(this.engine){
-      Composite.add(this.engine.world, Bodies.circle(20 ,20, 20) );
+    if (this.engine && event.key === "a"){
+      Composite.add(this.engine.world, Bodies.circle(20 ,20, 20));
+    }
+    if (this.engine && event.key === "l" && this.center && this.center) {
+      Body.scale(this.center, 1.5, 1.5)
+      console.log("yo");
+    }
+    if (this.engine && event.key === "s" && this.center && this.center) {
+      Body.scale(this.center, 0.5, 0.5)
+      console.log("yo");
+    }
+    if (this.engine && event.key === "f"){
+      Composite.add(this.engine.world, Bodies.circle(20 ,20, 80, {mass: 100, inverseMass: 1/100}));
     }
   }
 
-  constructor() { }
+  constructor() {}
 
   ngOnInit(): void {
     Matter.use(MatterAttractors);
@@ -34,20 +47,35 @@ export class WordCloudComponent implements OnInit {
 
     const components: Array<Body | Composite | Constraint | MouseConstraint> = [];
 
-    components.push(Bodies.circle(this.canvasWidth/2, this.canvasHeight/2, 40, {isStatic: true, plugin: {
+    this.center = Bodies.circle(this.canvasWidth/2, this.canvasHeight/2, 5, {isStatic: true, isSensor: true, plugin: {
       attractors: [function(bodyA: Body, bodyB: Body) {
         return {
-          x: (bodyA.position.x - bodyB.position.x) * 4e-6,
-          y: (bodyA.position.y - bodyB.position.y) * 4e-6,
+          x: (bodyA.position.x - bodyB.position.x) * 4e-6 * (bodyB.mass * 0.5),
+          y: (bodyA.position.y - bodyB.position.y) * 4e-6 * (bodyB.mass * 0.5),
         };
       }]
-    }}));
+    }})
 
-    components.push(MouseConstraint.create(this.engine, {mouse: Matter.Mouse.create(this.render.canvas)}));
+    components.push(this.center);
 
-    components.push(Bodies.circle(20, 20, 30, {restitution: 1}));
+    //components.push(MouseConstraint.create(this.engine, {mouse: Matter.Mouse.create(this.render.canvas)}));
+
+    components.push(Bodies.circle(20, 20, 20));
 
     Composite.add(this.engine.world, components);
+
+    this.mouse = Mouse.create(this.render.canvas);
+
+    Events.on(this.engine, "beforeUpdate", (e: Matter.IEventTimestamped<Engine>) => {
+      var allBodies = Composite.allBodies(e.source.world);
+      if (this.mouse.button === 0) {
+        for (const body of allBodies) {
+          if (Bounds.contains(body.bounds, this.mouse.position)) {
+            Body.scale(body, 1.5, 1.5);
+          }
+        }
+      }
+    });
 
     Render.run(this.render);
 
