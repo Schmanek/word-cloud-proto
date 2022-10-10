@@ -47,7 +47,7 @@ export class WordCloudComponent implements OnInit {
 
     const components: Array<Body | Composite | Constraint | MouseConstraint> = [];
 
-    this.center = Bodies.circle(this.canvasWidth/2, this.canvasHeight/2, 5, {isStatic: true, isSensor: true, plugin: {
+    this.center = Bodies.circle(this.canvasWidth/2, this.canvasHeight/2, 30, {isStatic: true, isSensor: false, plugin: {
       attractors: [function(bodyA: Body, bodyB: Body) {
         return {
           x: (bodyA.position.x - bodyB.position.x) * 4e-6 * (bodyB.mass * 0.5),
@@ -71,7 +71,7 @@ export class WordCloudComponent implements OnInit {
       if (this.mouse.button === 0) {
         for (const body of allBodies) {
           if (Bounds.contains(body.bounds, this.mouse.position)) {
-            Body.scale(body, 1.5, 1.5);
+            Body.scale(body, 1.01, 1.01);
           }
         }
       }
